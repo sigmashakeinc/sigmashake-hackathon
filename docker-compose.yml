@@ -1,0 +1,44 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: api
+    environment:
+      SIGMASHAKE_ENV: local
+      SIGMASHAKE_API_ADDR: :8787
+      ACCOUNTS_BASE_URL: https://accounts.sigmashake.com
+      SIGMASHAKE_LOCAL_ACCOUNT_ID: local-agent
+    ports:
+      - "8787:8787"
+    volumes:
+      - hackathon-state:/var/lib/sigmashake-hackathon
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: web
+    environment:
+      SIGMASHAKE_API_URL: http://api:8787
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8787
+      NEXT_TELEMETRY_DISABLED: "1"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+  hackctl:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: hackctl
+    profiles:
+      - tools
+    volumes:
+      - .:/workspace
+      - hackathon-state:/var/lib/sigmashake-hackathon
+    working_dir: /workspace
+
+volumes:
+  hackathon-state:

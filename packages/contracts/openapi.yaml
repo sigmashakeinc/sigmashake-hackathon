@@ -1,0 +1,74 @@
+openapi: 3.1.0
+info:
+  title: SigmaShake Hackathon API
+  version: 0.1.0
+servers:
+  - url: http://localhost:8787
+paths:
+  /healthz:
+    get:
+      operationId: health
+      responses:
+        "200":
+          description: Service health
+  /v1/status:
+    get:
+      operationId: runtimeStatus
+      responses:
+        "200":
+          description: Runtime status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RuntimeStatus"
+  /v1/auth/session:
+    get:
+      operationId: authSession
+      responses:
+        "200":
+          description: Current session derived from accounts.sigmashake.com
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+  /v1/sync/snapshot:
+    get:
+      operationId: syncSnapshot
+      responses:
+        "200":
+          description: Current local snapshot metadata
+components:
+  schemas:
+    RuntimeStatus:
+      type: object
+      required: [health, environment, authMode, stateGeneration, supervisor, tracks, agents]
+      properties:
+        health:
+          type: string
+          enum: [ok, degraded, down]
+        environment:
+          type: string
+        authMode:
+          type: string
+        stateGeneration:
+          type: string
+        supervisor:
+          type: string
+        tracks:
+          type: array
+          items:
+            type: object
+        agents:
+          type: array
+          items:
+            type: object
+    Session:
+      type: object
+      required: [authenticated, source]
+      properties:
+        authenticated:
+          type: boolean
+        subject:
+          type: string
+        source:
+          type: string

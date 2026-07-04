@@ -1,0 +1,182 @@
+{
+  "version": 1,
+  "taxonomy": "sigmashake-workspace-20",
+  "gates": [
+    {
+      "kind": "unit",
+      "category": "test",
+      "description": "Pure unit coverage for Go domain/supervisor code and frontend view-model code.",
+      "commands": [
+        "scripts/go-test-gate.sh services/api-go/internal/domain services/api-go/internal/supervisor tools/hackctl/internal/syncstate",
+        "npm --workspace apps/web run test:unit"
+      ]
+    },
+    {
+      "kind": "integration",
+      "category": "test",
+      "description": "Local integration checks across API handlers and coordination contracts.",
+      "commands": [
+        "scripts/go-test-gate.sh services/api-go/internal/httpapi"
+      ]
+    },
+    {
+      "kind": "component",
+      "category": "test",
+      "description": "React component behavior in jsdom.",
+      "commands": [
+        "npm --workspace apps/web run test:component"
+      ]
+    },
+    {
+      "kind": "e2e",
+      "category": "test",
+      "description": "Browser smoke path against the Next.js app.",
+      "commands": [
+        "npm --workspace apps/web run test:e2e"
+      ]
+    },
+    {
+      "kind": "regression",
+      "category": "test",
+      "description": "Known migration invariants from SSG-Hackathon.",
+      "commands": [
+        "node scripts/gate-note.mjs regression docs/architecture.md SPEC_SHEET.md"
+      ]
+    },
+    {
+      "kind": "api",
+      "category": "test",
+      "description": "HTTP and OpenAPI contract tests.",
+      "commands": [
+        "scripts/go-test-gate.sh services/api-go/internal/httpapi",
+        "node scripts/gate-note.mjs api packages/contracts/openapi.yaml"
+      ]
+    },
+    {
+      "kind": "load",
+      "category": "performance",
+      "description": "Load harness placeholder for sustained expected traffic.",
+      "commands": [
+        "node scripts/gate-note.mjs load packages/contracts/openapi.yaml"
+      ],
+      "heavy": true
+    },
+    {
+      "kind": "stress",
+      "category": "performance",
+      "description": "Stress harness placeholder for saturation behavior.",
+      "commands": [
+        "node scripts/gate-note.mjs stress docs/architecture.md"
+      ],
+      "heavy": true
+    },
+    {
+      "kind": "spike",
+      "category": "performance",
+      "description": "Spike harness placeholder for abrupt traffic changes.",
+      "commands": [
+        "node scripts/gate-note.mjs spike docs/architecture.md"
+      ],
+      "heavy": true
+    },
+    {
+      "kind": "soak",
+      "category": "performance",
+      "description": "Soak harness placeholder for long-running stability.",
+      "commands": [
+        "node scripts/gate-note.mjs soak docs/architecture.md"
+      ],
+      "heavy": true
+    },
+    {
+      "kind": "scalability",
+      "category": "performance",
+      "description": "Scalability harness placeholder for Cloudflare region and binding scale.",
+      "commands": [
+        "node scripts/gate-note.mjs scalability docs/architecture.md"
+      ],
+      "heavy": true
+    },
+    {
+      "kind": "chaos",
+      "category": "resilience",
+      "description": "Chaos harness placeholder for dependency failures.",
+      "commands": [
+        "node scripts/gate-note.mjs chaos services/api-go/internal/supervisor/supervisor_test.go"
+      ],
+      "heavy": true
+    },
+    {
+      "kind": "failover",
+      "category": "resilience",
+      "description": "Failover harness placeholder for R2/D1/API degradation.",
+      "commands": [
+        "node scripts/gate-note.mjs failover docs/architecture.md"
+      ],
+      "heavy": true
+    },
+    {
+      "kind": "dr",
+      "category": "resilience",
+      "description": "Disaster recovery harness placeholder for snapshot restore.",
+      "commands": [
+        "scripts/go-test-gate.sh tools/hackctl/internal/syncstate",
+        "node scripts/gate-note.mjs dr docs/architecture.md"
+      ],
+      "heavy": true
+    },
+    {
+      "kind": "configuration",
+      "category": "check",
+      "description": "Docker, env, and gate configuration are present and parseable.",
+      "commands": [
+        "node --check scripts/run-gates.mjs",
+        "node --check scripts/gate-note.mjs",
+        "node scripts/gate-note.mjs configuration docker-compose.yml .env.example config/pr-gates.json"
+      ]
+    },
+    {
+      "kind": "onboarding",
+      "category": "check",
+      "description": "Agent and developer onboarding docs stay present.",
+      "commands": [
+        "node scripts/gate-note.mjs onboarding README.md AGENTS.md SPEC_SHEET.md"
+      ]
+    },
+    {
+      "kind": "sast",
+      "category": "security",
+      "description": "Static security baseline for source and deploy tooling.",
+      "commands": [
+        "node scripts/gate-note.mjs sast apps/web/app/page.tsx services/api-go/internal/httpapi/server.go tools/hackctl/internal/cfdeploy/deploy.go"
+      ]
+    },
+    {
+      "kind": "dast",
+      "category": "security",
+      "description": "DAST harness placeholder for deployed preview scans.",
+      "commands": [
+        "node scripts/gate-note.mjs dast packages/contracts/openapi.yaml"
+      ],
+      "heavy": true
+    },
+    {
+      "kind": "pen",
+      "category": "security",
+      "description": "Pen-test evidence placeholder for auth and state-sync attack paths.",
+      "commands": [
+        "node scripts/gate-note.mjs pen SPEC_SHEET.md packages/contracts/openapi.yaml"
+      ],
+      "heavy": true
+    },
+    {
+      "kind": "dependencies",
+      "category": "security",
+      "description": "Dependency manifest baseline.",
+      "commands": [
+        "go work edit -json >/dev/null",
+        "node scripts/gate-note.mjs dependencies package.json apps/web/package.json services/api-go/go.mod tools/hackctl/go.mod"
+      ]
+    }
+  ]
+}

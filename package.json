@@ -1,0 +1,38 @@
+{
+  "name": "sigmashake-hackathon",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@10.8.2",
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "docker compose up --build",
+    "check": "node scripts/run-gates.mjs --category check",
+    "gates:list": "node scripts/run-gates.mjs --list",
+    "test": "node scripts/run-gates.mjs --category test",
+    "test:unit": "node scripts/run-gates.mjs --gate unit",
+    "test:integration": "node scripts/run-gates.mjs --gate integration",
+    "test:component": "node scripts/run-gates.mjs --gate component",
+    "test:e2e": "node scripts/run-gates.mjs --gate e2e",
+    "test:regression": "node scripts/run-gates.mjs --gate regression",
+    "test:api": "node scripts/run-gates.mjs --gate api",
+    "test:load": "node scripts/run-gates.mjs --gate load",
+    "test:stress": "node scripts/run-gates.mjs --gate stress",
+    "test:spike": "node scripts/run-gates.mjs --gate spike",
+    "test:soak": "node scripts/run-gates.mjs --gate soak",
+    "test:scalability": "node scripts/run-gates.mjs --gate scalability",
+    "test:chaos": "node scripts/run-gates.mjs --gate chaos",
+    "test:failover": "node scripts/run-gates.mjs --gate failover",
+    "test:dr": "node scripts/run-gates.mjs --gate dr",
+    "test:configuration": "node scripts/run-gates.mjs --gate configuration",
+    "test:onboarding": "node scripts/run-gates.mjs --gate onboarding",
+    "test:sast": "node scripts/run-gates.mjs --gate sast",
+    "test:dast": "node scripts/run-gates.mjs --gate dast",
+    "test:pen": "node scripts/run-gates.mjs --gate pen",
+    "test:dependencies": "node scripts/run-gates.mjs --gate dependencies",
+    "publish:check": "node scripts/publish-check.mjs",
+    "deploy": "./scripts/deploy.sh"
+  }
+}
