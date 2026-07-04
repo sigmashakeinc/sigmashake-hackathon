@@ -1,0 +1,9 @@
+# Promote this file to the repository contribution metadata path after publication.
+
+* @sigmashakeinc/maintainers
+
+/apps/web/ @sigmashakeinc/frontend
+/services/api-go/ @sigmashakeinc/runtime
+/tools/hackctl/ @sigmashakeinc/runtime
+/packages/contracts/ @sigmashakeinc/runtime
+/config/pr-gates.json @sigmashakeinc/maintainers
