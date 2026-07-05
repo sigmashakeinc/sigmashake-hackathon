@@ -35,26 +35,55 @@ func run(ctx context.Context, args []string) error {
 }
 
 func runCF(ctx context.Context, args []string) error {
-	if len(args) == 0 || args[0] != "deploy" {
-		return fmt.Errorf("usage: hackctl cf deploy [flags]")
+	if len(args) == 0 {
+		return fmt.Errorf("usage: hackctl cf <deploy|surface> [flags]")
 	}
 
+	switch args[0] {
+	case "deploy":
+		return runCFDeploy(ctx, args[1:])
+	case "surface":
+		return runCFSurface(ctx, args[1:])
+	default:
+		return fmt.Errorf("usage: hackctl cf <deploy|surface> [flags]")
+	}
+}
+
+func runCFDeploy(ctx context.Context, args []string) error {
 	flags := flag.NewFlagSet("cf deploy", flag.ContinueOnError)
 	project := flags.String("project", "web", "project to deploy: web or api")
 	environment := flags.String("env", "production", "deployment environment")
 	artifact := flags.String("artifact", "", "worker module artifact path")
 	dryRun := flags.Bool("dry-run", false, "print the deployment plan without calling Cloudflare")
-	if err := flags.Parse(args[1:]); err != nil {
+	if err := flags.Parse(args); err != nil {
 		return err
 	}
 
+	options := cloudflareOptions(*project, *environment, *artifact, *dryRun)
+	return cfdeploy.Deploy(ctx, options)
+}
+
+func runCFSurface(ctx context.Context, args []string) error {
+	flags := flag.NewFlagSet("cf surface", flag.ContinueOnError)
+	project := flags.String("project", "web", "project to configure: web or api")
+	environment := flags.String("env", "production", "deployment environment")
+	dryRun := flags.Bool("dry-run", false, "print the surface plan without calling Cloudflare")
+	if err := flags.Parse(args); err != nil {
+		return err
+	}
+
+	options := cloudflareOptions(*project, *environment, "", *dryRun)
+	return cfdeploy.ConfigureSurfaces(ctx, options)
+}
+
+func cloudflareOptions(project string, environment string, artifact string, dryRun bool) cfdeploy.Options {
 	options := cfdeploy.Options{
 		AccountID:    os.Getenv("CLOUDFLARE_ACCOUNT_ID"),
 		APIToken:     os.Getenv("CLOUDFLARE_API_TOKEN"),
-		Project:      *project,
-		Environment:  *environment,
-		ArtifactPath: *artifact,
-		Hostname:     cloudflareHostname(*project, *environment),
+		Project:      project,
+		Environment:  environment,
+		ArtifactPath: artifact,
+		Hostname:     cloudflareHostname(project, environment),
 		ZoneID:       os.Getenv("CLOUDFLARE_ZONE_ID"),
 		ZoneName:     getenv("CLOUDFLARE_ZONE_NAME", "sigmashake.com"),
 		EnableWorkersDev: getenvBool(
@@ -65,14 +94,14 @@ func runCF(ctx context.Context, args []string) error {
 			"CLOUDFLARE_WORKERS_DEV_PREVIEWS",
 			true,
 		),
-		DryRun: *dryRun,
+		DryRun: dryRun,
 	}
 	if options.Project == "web" {
 		options.ScriptName = getenv("CLOUDFLARE_WEB_SCRIPT", "sigmashake-hackathon-web")
 	} else {
 		options.ScriptName = getenv("CLOUDFLARE_API_SCRIPT", "sigmashake-hackathon-api")
 	}
-	return cfdeploy.Deploy(ctx, options)
+	return options
 }
 
 func runSync(args []string) error {

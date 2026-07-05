@@ -71,6 +71,25 @@ func Deploy(ctx context.Context, options Options) error {
 	if err := promoteVersion(ctx, client, options, versionID); err != nil {
 		return err
 	}
+	return ConfigureSurfaces(ctx, options)
+}
+
+func ConfigureSurfaces(ctx context.Context, options Options) error {
+	if options.ScriptName == "" {
+		return fmt.Errorf("script name is required")
+	}
+	if options.DryRun {
+		fmt.Printf("cloudflare surface project=%s env=%s script=%s hostname=%s workers_dev=%t previews=%t\n", options.Project, options.Environment, options.ScriptName, options.Hostname, options.EnableWorkersDev, options.WorkersDevPreviews)
+		return nil
+	}
+	if options.AccountID == "" || options.APIToken == "" {
+		return fmt.Errorf("CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN are required")
+	}
+	if options.Hostname != "" && options.ZoneID == "" && options.ZoneName == "" {
+		return fmt.Errorf("CLOUDFLARE_ZONE_ID or CLOUDFLARE_ZONE_NAME is required when hostname is set")
+	}
+
+	client := &http.Client{Timeout: 60 * time.Second}
 	if options.EnableWorkersDev {
 		if err := enableWorkersDev(ctx, client, options); err != nil {
 			return err

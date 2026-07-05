@@ -24,12 +24,15 @@ The target repository is `sigmashakeinc/sigmashake-hackathon`.
 ## Live Collaboration Surface
 
 `hack.sigmashake.com` is not created by GitHub. It becomes live when the
-release runner has a Cloudflare token and runs `hackctl cf deploy`.
+release runner has a Cloudflare token, deploys the OpenNext Worker, and runs
+`hackctl cf surface`.
 
-The deploy command uploads and promotes the Worker, enables the script on the
-account workers.dev subdomain for fast preview access, and attaches the
-`hack.sigmashake.com` custom domain to the web Worker. Cloudflare owns DNS and
-certificate issuance for the custom domain after that attach call succeeds.
+The web deploy command uses the project-local OpenNext adapter to upload the
+Next.js Worker module graph and static assets. `hackctl cf surface` then enables
+the script on the account workers.dev subdomain for fast preview access and
+attaches the `hack.sigmashake.com` custom domain to the web Worker. Cloudflare
+owns DNS and certificate issuance for the custom domain after that attach call
+succeeds.
 
 Until those secrets exist, collaborators can still use the same deterministic
 local stack with `npm run dev`, but there is no shared public URL.

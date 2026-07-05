@@ -48,11 +48,15 @@ Production should upload snapshots to R2 and coordinate active generation number
 
 ## Deployment
 
-The deploy path intentionally avoids Wrangler:
+The deploy path avoids global Wrangler installs and keeps deployment inside the
+project dependency graph:
 
 1. Build frontend and Go artifacts.
-2. `hackctl cf deploy` creates a Workers version using the Cloudflare API.
-3. `hackctl cf deploy` promotes that version to 100 percent traffic.
-4. For the web project, `hackctl cf deploy` enables workers.dev previews and
-   attaches the Worker to `hack.sigmashake.com` through the Cloudflare custom
-   domains API.
+2. `opennextjs-cloudflare build` adapts the Next.js app into a Workers module
+   graph and static asset bundle.
+3. `opennextjs-cloudflare deploy` uploads and promotes the Next.js Worker with
+   its assets from the local npm dependency, not a global Wrangler install.
+4. `hackctl cf surface` enables workers.dev previews and attaches the Worker to
+   `hack.sigmashake.com` through the Cloudflare custom domains API.
+5. Go-only Worker/API artifacts can still use `hackctl cf deploy`, which creates
+   and promotes Workers versions directly through the Cloudflare API.
