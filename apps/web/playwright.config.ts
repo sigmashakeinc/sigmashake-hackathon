@@ -4,6 +4,7 @@ export default defineConfig({
   testDir: "test/e2e",
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000",
+    channel: process.env.PLAYWRIGHT_BROWSER_CHANNEL ?? "chrome",
     trace: "on-first-retry"
   },
   webServer: {

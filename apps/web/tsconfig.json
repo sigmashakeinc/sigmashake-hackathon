@@ -15,12 +15,40 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "ignoreDeprecations": "6.0",
     "jsx": "react-jsx",
     "incremental": true,
     "baseUrl": ".",
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@ui/*": [
+        "./packages/ui/*"
+      ],
+      "@hooks/*": [
+        "./packages/hooks/*"
+      ],
+      "@utils/*": [
+        "./packages/utils/*"
+      ],
+      "@config/*": [
+        "./packages/config/*"
+      ],
+      "@types/*": [
+        "./packages/types/*"
+      ],
+      "@icons/*": [
+        "./packages/icons/*"
+      ],
+      "@theme/*": [
+        "./packages/theme/*"
+      ],
+      "@providers/*": [
+        "./packages/providers/*"
+      ],
+      "@layouts/*": [
+        "./packages/layouts/*"
       ]
     },
     "plugins": [
