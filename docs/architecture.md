@@ -53,3 +53,6 @@ The deploy path intentionally avoids Wrangler:
 1. Build frontend and Go artifacts.
 2. `hackctl cf deploy` creates a Workers version using the Cloudflare API.
 3. `hackctl cf deploy` promotes that version to 100 percent traffic.
+4. For the web project, `hackctl cf deploy` enables workers.dev previews and
+   attaches the Worker to `hack.sigmashake.com` through the Cloudflare custom
+   domains API.

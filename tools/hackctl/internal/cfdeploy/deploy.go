@@ -13,14 +13,22 @@ import (
 	"time"
 )
 
+const defaultAPIBase = "https://api.cloudflare.com/client/v4"
+
 type Options struct {
-	AccountID    string
-	APIToken     string
-	ScriptName   string
-	Project      string
-	Environment  string
-	ArtifactPath string
-	DryRun       bool
+	AccountID          string
+	APIToken           string
+	ScriptName         string
+	Project            string
+	Environment        string
+	ArtifactPath       string
+	Hostname           string
+	ZoneID             string
+	ZoneName           string
+	EnableWorkersDev   bool
+	WorkersDevPreviews bool
+	APIBase            string
+	DryRun             bool
 }
 
 type versionResponse struct {
@@ -44,12 +52,15 @@ func Deploy(ctx context.Context, options Options) error {
 	}
 
 	if options.DryRun {
-		fmt.Printf("cloudflare deploy project=%s env=%s script=%s artifact=%s\n", options.Project, options.Environment, options.ScriptName, options.ArtifactPath)
+		fmt.Printf("cloudflare deploy project=%s env=%s script=%s artifact=%s hostname=%s workers_dev=%t previews=%t\n", options.Project, options.Environment, options.ScriptName, options.ArtifactPath, options.Hostname, options.EnableWorkersDev, options.WorkersDevPreviews)
 		return nil
 	}
 
 	if options.AccountID == "" || options.APIToken == "" {
 		return fmt.Errorf("CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN are required")
+	}
+	if options.Hostname != "" && options.ZoneID == "" && options.ZoneName == "" {
+		return fmt.Errorf("CLOUDFLARE_ZONE_ID or CLOUDFLARE_ZONE_NAME is required when hostname is set")
 	}
 
 	client := &http.Client{Timeout: 60 * time.Second}
@@ -57,7 +68,20 @@ func Deploy(ctx context.Context, options Options) error {
 	if err != nil {
 		return err
 	}
-	return promoteVersion(ctx, client, options, versionID)
+	if err := promoteVersion(ctx, client, options, versionID); err != nil {
+		return err
+	}
+	if options.EnableWorkersDev {
+		if err := enableWorkersDev(ctx, client, options); err != nil {
+			return err
+		}
+	}
+	if options.Hostname != "" {
+		if err := attachDomain(ctx, client, options); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func createVersion(ctx context.Context, client *http.Client, options Options) (string, error) {
@@ -96,7 +120,7 @@ func createVersion(ctx context.Context, client *http.Client, options Options) (s
 		return "", err
 	}
 
-	url := fmt.Sprintf("https://api.cloudflare.com/client/v4/accounts/%s/workers/scripts/%s/versions", options.AccountID, options.ScriptName)
+	url := fmt.Sprintf("%s/accounts/%s/workers/scripts/%s/versions", apiBase(options), options.AccountID, options.ScriptName)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, body)
 	if err != nil {
 		return "", err
@@ -130,7 +154,7 @@ func promoteVersion(ctx context.Context, client *http.Client, options Options, v
 		return err
 	}
 
-	url := fmt.Sprintf("https://api.cloudflare.com/client/v4/accounts/%s/workers/scripts/%s/deployments", options.AccountID, options.ScriptName)
+	url := fmt.Sprintf("%s/accounts/%s/workers/scripts/%s/deployments", apiBase(options), options.AccountID, options.ScriptName)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
 		return err
@@ -147,6 +171,77 @@ func promoteVersion(ctx context.Context, client *http.Client, options Options, v
 	}
 	if !response.Success {
 		return fmt.Errorf("cloudflare deployment failed: %s", firstError(response.Errors))
+	}
+	return nil
+}
+
+func enableWorkersDev(ctx context.Context, client *http.Client, options Options) error {
+	payload := map[string]bool{
+		"enabled":          true,
+		"previews_enabled": options.WorkersDevPreviews,
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	url := fmt.Sprintf("%s/accounts/%s/workers/scripts/%s/subdomain", apiBase(options), options.AccountID, options.ScriptName)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+options.APIToken)
+	req.Header.Set("Content-Type", "application/json")
+
+	var response struct {
+		Success bool       `json:"success"`
+		Errors  []apiError `json:"errors"`
+	}
+	if err := doJSON(client, req, &response); err != nil {
+		return err
+	}
+	if !response.Success {
+		return fmt.Errorf("cloudflare workers.dev setup failed: %s", firstError(response.Errors))
+	}
+	return nil
+}
+
+func attachDomain(ctx context.Context, client *http.Client, options Options) error {
+	payload := map[string]string{
+		"hostname": options.Hostname,
+		"service":  options.ScriptName,
+	}
+	if options.Environment != "" {
+		payload["environment"] = options.Environment
+	}
+	if options.ZoneID != "" {
+		payload["zone_id"] = options.ZoneID
+	}
+	if options.ZoneName != "" {
+		payload["zone_name"] = options.ZoneName
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	url := fmt.Sprintf("%s/accounts/%s/workers/domains", apiBase(options), options.AccountID)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+options.APIToken)
+	req.Header.Set("Content-Type", "application/json")
+
+	var response struct {
+		Success bool       `json:"success"`
+		Errors  []apiError `json:"errors"`
+	}
+	if err := doJSON(client, req, &response); err != nil {
+		return err
+	}
+	if !response.Success {
+		return fmt.Errorf("cloudflare custom domain setup failed: %s", firstError(response.Errors))
 	}
 	return nil
 }
@@ -183,4 +278,18 @@ func defaultArtifact(project string) string {
 		return "dist/api/worker.js"
 	}
 	return "apps/web/.open-next/worker.js"
+}
+
+func apiBase(options Options) string {
+	if options.APIBase != "" {
+		return trimTrailingSlash(options.APIBase)
+	}
+	return defaultAPIBase
+}
+
+func trimTrailingSlash(value string) string {
+	for len(value) > 0 && value[len(value)-1] == '/' {
+		value = value[:len(value)-1]
+	}
+	return value
 }

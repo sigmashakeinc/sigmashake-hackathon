@@ -15,6 +15,24 @@ The target repository is `sigmashakeinc/sigmashake-hackathon`.
    - `CLOUDFLARE_API_TOKEN`
    - `CLOUDFLARE_WEB_SCRIPT`
    - `CLOUDFLARE_API_SCRIPT`
+   - `CLOUDFLARE_WEB_HOSTNAME` defaults to `hack.sigmashake.com`
+   - `CLOUDFLARE_ZONE_NAME` defaults to `sigmashake.com`
+   - `CLOUDFLARE_ZONE_ID` can be used instead of `CLOUDFLARE_ZONE_NAME`
+   - `CLOUDFLARE_ENABLE_WORKERS_DEV` defaults to `true`
+   - `CLOUDFLARE_WORKERS_DEV_PREVIEWS` defaults to `true`
+
+## Live Collaboration Surface
+
+`hack.sigmashake.com` is not created by GitHub. It becomes live when the
+release runner has a Cloudflare token and runs `hackctl cf deploy`.
+
+The deploy command uploads and promotes the Worker, enables the script on the
+account workers.dev subdomain for fast preview access, and attaches the
+`hack.sigmashake.com` custom domain to the web Worker. Cloudflare owns DNS and
+certificate issuance for the custom domain after that attach call succeeds.
+
+Until those secrets exist, collaborators can still use the same deterministic
+local stack with `npm run dev`, but there is no shared public URL.
 
 ## Branch Protection
 

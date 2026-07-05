@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/sigmashakeinc/sigmashake-hackathon/tools/hackctl/internal/cfdeploy"
@@ -53,7 +54,18 @@ func runCF(ctx context.Context, args []string) error {
 		Project:      *project,
 		Environment:  *environment,
 		ArtifactPath: *artifact,
-		DryRun:       *dryRun,
+		Hostname:     cloudflareHostname(*project, *environment),
+		ZoneID:       os.Getenv("CLOUDFLARE_ZONE_ID"),
+		ZoneName:     getenv("CLOUDFLARE_ZONE_NAME", "sigmashake.com"),
+		EnableWorkersDev: getenvBool(
+			"CLOUDFLARE_ENABLE_WORKERS_DEV",
+			false,
+		),
+		WorkersDevPreviews: getenvBool(
+			"CLOUDFLARE_WORKERS_DEV_PREVIEWS",
+			true,
+		),
+		DryRun: *dryRun,
 	}
 	if options.Project == "web" {
 		options.ScriptName = getenv("CLOUDFLARE_WEB_SCRIPT", "sigmashake-hackathon-web")
@@ -91,4 +103,29 @@ func getenv(key string, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+func getenvBool(key string, fallback bool) bool {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+	parsed, err := strconv.ParseBool(value)
+	if err != nil {
+		return fallback
+	}
+	return parsed
+}
+
+func cloudflareHostname(project string, environment string) string {
+	if value := os.Getenv("CLOUDFLARE_HOSTNAME"); value != "" {
+		return value
+	}
+	if project == "web" {
+		return getenv("CLOUDFLARE_WEB_HOSTNAME", "hack.sigmashake.com")
+	}
+	if project == "api" {
+		return os.Getenv("CLOUDFLARE_API_HOSTNAME")
+	}
+	return ""
 }
