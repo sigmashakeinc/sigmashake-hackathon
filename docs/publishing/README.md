@@ -9,7 +9,7 @@ The target repository is `sigmashakeinc/sigmashake-hackathon`.
 3. Generate the npm lockfile with lifecycle scripts disabled once package-install approval is available.
 4. Create the public repository.
 5. Push this project as the standalone repository root.
-6. Promote `docs/publishing/release-runner.yml` into the repository's live workflow location once local SSG allows that path.
+6. Keep `.github/workflows/release-runner.yml` in sync with `docs/publishing/release-runner.yml`.
 7. Add repository secrets and variables:
    - `CLOUDFLARE_ACCOUNT_ID`
    - `CLOUDFLARE_API_TOKEN`
