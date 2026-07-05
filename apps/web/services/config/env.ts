@@ -5,12 +5,19 @@ export type EnvVar = {
   defaultValue?: string;
 };
 
+const sigmashakeEnv =
+  process.env.NEXT_PUBLIC_SIGMASHAKE_ENV ?? process.env.SIGMASHAKE_ENV;
+const defaultAppUrl =
+  sigmashakeEnv === "production"
+    ? "https://hack.sigmashake.com"
+    : "http://localhost:3000";
+
 export const envVars: EnvVar[] = [
   {
     key: "NEXT_PUBLIC_APP_URL",
     required: true,
     description: "Public URL of the application",
-    defaultValue: "http://localhost:3000",
+    defaultValue: defaultAppUrl,
   },
   {
     key: "NEXT_PUBLIC_SIGMASHAKE_ACCOUNTS_URL",
@@ -46,7 +53,7 @@ export function validateEnv(): EnvValidation {
   const warnings: EnvValidation["warnings"] = [];
 
   for (const envVar of envVars) {
-    const value = process.env[envVar.key];
+    const value = process.env[envVar.key] ?? envVar.defaultValue;
     if (!value) {
       if (envVar.required) {
         missing.push({ key: envVar.key, description: envVar.description });

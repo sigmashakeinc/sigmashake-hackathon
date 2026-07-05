@@ -1,11 +1,16 @@
+const sigmashakeEnv =
+  process.env.NEXT_PUBLIC_SIGMASHAKE_ENV ?? process.env.SIGMASHAKE_ENV;
+const defaultAppUrl =
+  sigmashakeEnv === "production"
+    ? "https://hack.sigmashake.com"
+    : "http://localhost:3000";
+
 export const config = {
   app: {
     name: process.env.NEXT_PUBLIC_APP_NAME ?? "SigmaShake Hackathon",
-    url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+    url: process.env.NEXT_PUBLIC_APP_URL ?? defaultAppUrl,
     version: "0.1.0",
-    environment: (process.env.NEXT_PUBLIC_SIGMASHAKE_ENV ??
-      process.env.SIGMASHAKE_ENV ??
-      "development") as
+    environment: (sigmashakeEnv ?? "development") as
       "development" | "preview" | "production",
   },
   accounts: {

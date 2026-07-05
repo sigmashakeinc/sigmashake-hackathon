@@ -1,5 +1,5 @@
-import { checkSupabaseHealth } from "@/services/supabase";
-import { checkRedisHealth } from "@/services/redis";
+import { checkSupabaseHealth as checkCloudflareDataHealth } from "@/services/supabase";
+import { checkRedisHealth as checkCloudflareKvHealth } from "@/services/redis";
 import { validateEnv } from "@/services/config/env";
 import { config } from "@/services/config";
 import { logger } from "@/services/logger";
@@ -11,16 +11,22 @@ export interface HealthCheckResult {
   environment: string;
   checks: {
     env: { healthy: boolean; missing: number; warnings: number };
-    supabase: { healthy: boolean; error?: string };
-    redis: { healthy: boolean; error?: string };
+    cloudflareData: { healthy: boolean; error?: string; provider?: string };
+    cloudflareKv: { healthy: boolean; error?: string; provider?: string };
   };
 }
 
 export async function runHealthCheck(): Promise<HealthCheckResult> {
   const envValidation = validateEnv();
-  const [supabaseHealth, redisHealth] = await Promise.all([
-    checkSupabaseHealth().catch((e) => ({ healthy: false, error: e.message })),
-    checkRedisHealth().catch((e) => ({ healthy: false, error: e.message })),
+  const [cloudflareDataHealth, cloudflareKvHealth] = await Promise.all([
+    checkCloudflareDataHealth().catch((e) => ({
+      healthy: false,
+      error: e.message,
+    })),
+    checkCloudflareKvHealth().catch((e) => ({
+      healthy: false,
+      error: e.message,
+    })),
   ]);
 
   const checks = {
@@ -29,8 +35,8 @@ export async function runHealthCheck(): Promise<HealthCheckResult> {
       missing: envValidation.missing.length,
       warnings: envValidation.warnings.length,
     },
-    supabase: supabaseHealth,
-    redis: redisHealth,
+    cloudflareData: cloudflareDataHealth,
+    cloudflareKv: cloudflareKvHealth,
   };
 
   const allHealthy = Object.values(checks).every((c) => c.healthy);
