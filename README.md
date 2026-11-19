@@ -1,3 +1,5 @@
+> **Deprecated (2026-11-19).** This project is retired. hack.sigmashake.com has been taken down and this repository is archived and read-only. Do not deploy this code: its auth is a stub (see `services/api-go/internal/domain/domain.go`) and the web setup/activity API routes are unauthenticated.
+
 # sigmashake-hackathon
 
 `hack.sigmashake.com` is the Cloudflare-native refactor target for the SSG Hackathon app. The local contract is Docker-first: every agent or developer runs the same services, gets the same filesystem snapshot behavior, and deploys with the Go `hackctl` tool instead of Cloudflare Wrangler.
